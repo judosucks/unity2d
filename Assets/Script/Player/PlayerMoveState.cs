@@ -1,8 +1,10 @@
 using System.Collections.Generic;
 using System.Collections;
 using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.Rendering.UI;
 
-public class PlayerMoveState : PlayerState
+public class PlayerMoveState : PlayerGroundedState
 {
     public PlayerMoveState(Player _player, PlayerStateMachine _stateMachine, string _animBoolName) : base(_player,
         _stateMachine, _animBoolName)
@@ -13,6 +15,7 @@ public class PlayerMoveState : PlayerState
     public override void Enter()
     {
         base.Enter();
+        Debug.Log("Enter move");
     }
 
     public override void Exit()
@@ -23,5 +26,27 @@ public class PlayerMoveState : PlayerState
     public override void Update()
     {
         base.Update();
+        moveDirection = Input.GetAxisRaw("Horizontal");
+        SprintInput();//衝刺輸入處理
+        if (!player.isAttacking)
+        {
+            Debug.Log("Player is not attacking");
+        player.SetVelocity(moveDirection * player.movementSpeed,rb.linearVelocity.y);
+            
+        }
+        
+        if (moveDirection == 0)
+        {
+            stateMachine.ChangeState(player.idleState);
+        }
     }
+
+    private void SprintInput()
+    {
+        if (Keyboard.current.leftShiftKey.isPressed && moveDirection != 0)
+        {
+            stateMachine.ChangeState(player.sprintState); // 切换到冲刺状态
+        }
+    }
+
 }

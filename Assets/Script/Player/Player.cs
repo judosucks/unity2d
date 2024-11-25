@@ -1,36 +1,150 @@
-using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.ComponentModel;
-using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.Assertions.Must;
 using UnityEngine.InputSystem;
 
-public class Player : MonoBehaviour
+public class Player : Entity
 {
-    public PlayerStateMachine stateMachine { get;private set; }
+    [Header("Attack Details")] 
+    public Vector2[] attackMovement;
+    [Header("cross kick")]
+    public float crossKickForce;
+    [Header("Movement")] 
+    public float movementSpeed = 2f;
+
+    public float horizontalSpeed = 1f;
+    public float straightJumpForce = 5f;
+    public float jumpForce = 3f;
+    
+
+    [Header("dash")] 
+    [SerializeField] private float dashCooldown;
+
+    public float dashSpeed;
+    public float dashDuration;
+
+    
+
+    private float dashUsageTimer;
+    private bool isBusy; // 私有字段
+
+    public bool GetIsBusy() // 公开方法获取属性
+    {
+        return isBusy;
+    }
+
+    public void SetIsBusy(bool value) // 公开方法设置属性
+    {
+        isBusy = value;
+    }
+    public bool isAttacking { get; set; } // 公开属性，用于指示玩家当前是否处于攻击状态
+
+    
+    
+    public PlayerState playerState { get; private set; }
+    public PlayerStateMachine stateMachine { get; private set; }
     public PlayerIdleState idleState { get; private set; }
     public PlayerMoveState moveState { get; private set; }
+    public PlayerStraightJumpState straightJumpState { get; private set; }
+    public PlayerStraightJumpAirState straightJumpAirState { get; private set; }
+    public PlayerJumpState jumpState { get; private set; }
+    public PlayerAirState airState { get; private set; }
 
-    private void Awake()
+    public PlayerDashState dashState { get; private set; }
+    public PlayerWallSlideState wallSlideState { get; private set; }
+
+    public PlayerWallJumpState wallJumpState { get; private set; }
+    public PlayerCrossKickState crossKickState { get; private set; }
+    public PlayerPrimaryAttackState primaryAttackState { get; private set; }
+    public PlayerSprintState sprintState { get; private set; }
+    protected override void Awake()
     {
+        base.Awake();
         stateMachine = new PlayerStateMachine();
-        
-        idleState = new PlayerIdleState(this, stateMachine,"Idle");
-        moveState = new PlayerMoveState(this, stateMachine,"Move");
+        sprintState = new PlayerSprintState(this, stateMachine, "Sprint");
+        crossKickState = new PlayerCrossKickState(this, stateMachine, "CrossKick");
+        straightJumpState = new PlayerStraightJumpState(this, stateMachine, "Jump");
+        straightJumpAirState = new PlayerStraightJumpAirState(this, stateMachine, "Jump");
+        idleState = new PlayerIdleState(this, stateMachine, "Idle");
+        moveState = new PlayerMoveState(this, stateMachine, "Move");
+        jumpState = new PlayerJumpState(this, stateMachine, "RunJump");
+        airState = new PlayerAirState(this, stateMachine, "RunJump");
+        dashState = new PlayerDashState(this, stateMachine, "Dash");
+        wallJumpState = new PlayerWallJumpState(this, stateMachine, "RunJump");
+        wallSlideState = new PlayerWallSlideState(this, stateMachine, "WallSlide");
+        primaryAttackState = new PlayerPrimaryAttackState(this, stateMachine, "Attack");
     }
 
-    private void Start()
+    protected override void Start()
     {
+        base.Start();
         stateMachine.Initialize(idleState);
+        
     }
 
-    private void Update()
+    protected override void Update()
     {
+        base.Update();
+        if (isBusy)
+            return; // 如果玩家处于忙碌状态，禁止其他输入
+        
         stateMachine.currentState.Update();
+        DashInput(); // 冲刺输入处理
+       
     }
 
+
+    
+
+    public IEnumerator BusyFor(float _seconds)
+    {
+        isBusy = true;
+        Debug.Log("busy");
+        yield return new WaitForSeconds(_seconds);
+
+        isBusy = false;
+        Debug.Log("not busy");
+    }
+// 被动画事件调用的方法
+    
+    private void DashInput()
+    {
+        if (isBusy || IsWallDetected() || !IsGroundDetected())
+        {
+            
+            return;
+        }
+        dashUsageTimer -= Time.deltaTime;
+        if ((Keyboard.current.fKey.wasPressedThisFrame && dashUsageTimer < 0) || (Gamepad.current != null &&
+                Gamepad.current.buttonEast.wasPressedThisFrame && dashUsageTimer < 0))
+        {
+            dashUsageTimer = dashCooldown;
+            stateMachine.ChangeState(dashState);
+            // // 如果不在冲刺状态，重置 canPerformDashAttack 为 false
+            // if (!(stateMachine.currentState is PlayerDashState))
+            // {
+            //     playerState.canPerformDashAttack = false;
+            // }
+        }
+    }
+
+    
+
+   
+
+    public void AnimationTrigger()
+    {
+        stateMachine.currentState.AnimationFinishTrigger();
+    }
+    public void OnDashAttackFrame()
+    {
+        Debug.Log("Dash attack frame reached.");
+        stateMachine.currentState.CanPerformDashAttack();
+    }
+    public void OnDashAttackComplete()
+    {
+        stateMachine.currentState.CanNotPerformDashAttack();
+    }
+   
     // private Rigidbody2D rb;
     // private PlayerInput playerInput;
     // private InputAction jumpAction;
