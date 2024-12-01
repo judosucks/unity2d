@@ -4,10 +4,16 @@ using UnityEngine.InputSystem;
 
 public class Player : Entity
 {
+    private Vector2 workSpace;
     [Header("Attack Details")] 
     public Vector2[] attackMovement;
-    [Header("cross kick")]
-    public float crossKickForce;
+
+    public float counterAttackDuration = .2f;
+    // [Header("cross kick")]
+    // public float crossKickForce;
+
+    
+    
     [Header("Movement")] 
     public float movementSpeed = 2f;
 
@@ -17,14 +23,14 @@ public class Player : Entity
     
 
     [Header("dash")] 
-    [SerializeField] private float dashCooldown;
+   
 
     public float dashSpeed;
     public float dashDuration;
 
     
 
-    private float dashUsageTimer;
+  
     private bool isBusy; // 私有字段
 
     public bool GetIsBusy() // 公开方法获取属性
@@ -56,9 +62,16 @@ public class Player : Entity
     public PlayerCrossKickState crossKickState { get; private set; }
     public PlayerPrimaryAttackState primaryAttackState { get; private set; }
     public PlayerSprintState sprintState { get; private set; }
+    public PlayerLedgeClimbState ledgeClimbState { get; private set; }
+    public PlayerCounterAttackState counterAttackState { get; private set; }
     protected override void Awake()
     {
         base.Awake();
+        
+        if (anim == null)
+        {
+            Debug.LogError("Animator component is missing in children.");
+        }
         stateMachine = new PlayerStateMachine();
         sprintState = new PlayerSprintState(this, stateMachine, "Sprint");
         crossKickState = new PlayerCrossKickState(this, stateMachine, "CrossKick");
@@ -72,6 +85,8 @@ public class Player : Entity
         wallJumpState = new PlayerWallJumpState(this, stateMachine, "RunJump");
         wallSlideState = new PlayerWallSlideState(this, stateMachine, "WallSlide");
         primaryAttackState = new PlayerPrimaryAttackState(this, stateMachine, "Attack");
+        ledgeClimbState = new PlayerLedgeClimbState(this,stateMachine,"LedgeClimbState");
+        counterAttackState = new PlayerCounterAttackState(this, stateMachine, "CounterAttack");
     }
 
     protected override void Start()
@@ -84,17 +99,41 @@ public class Player : Entity
     protected override void Update()
     {
         base.Update();
-        if (isBusy)
-            return; // 如果玩家处于忙碌状态，禁止其他输入
-        
         stateMachine.currentState.Update();
+        if (isBusy)
+        {
+            Debug.Log("Current State: " + stateMachine?.currentState);
+           Debug.Log("isbusy return");
+            return; // 如果玩家处于忙碌状态，禁止其他输入
+        }
+            
+        
+        
         DashInput(); // 冲刺输入处理
        
     }
 
-
     
-
+    // public virtual void CheckForLedge()
+    // {
+    //     if(ledgeDetected && canGrabLedge)
+    //     {
+    //         canGrabLedge = false;
+    //         Vector2 ledgePosition = GetComponentInChildren<PlayerLedgeCheckState>().transform.position;
+    //         
+    //         climbBegunPosition = ledgePosition + offset1;
+    //         climbOverPosition = ledgePosition + offset2;
+    //         canClimb = true;
+    //         stateMachine.ChangeState(ledgeClimbState);
+    //     }
+    //
+    //     if (canClimb)
+    //     {
+    //         transform.position = climbBegunPosition;
+    //     }
+    // }
+    //
+    
     public IEnumerator BusyFor(float _seconds)
     {
         isBusy = true;
@@ -104,7 +143,8 @@ public class Player : Entity
         isBusy = false;
         Debug.Log("not busy");
     }
-// 被动画事件调用的方法
+
+   
     
     private void DashInput()
     {
@@ -113,11 +153,11 @@ public class Player : Entity
             
             return;
         }
-        dashUsageTimer -= Time.deltaTime;
-        if ((Keyboard.current.fKey.wasPressedThisFrame && dashUsageTimer < 0) || (Gamepad.current != null &&
-                Gamepad.current.buttonEast.wasPressedThisFrame && dashUsageTimer < 0))
+        
+        if ((Keyboard.current.fKey.wasPressedThisFrame && SkillManager.instance.dashSkill.CanUseSkill()) || (Gamepad.current != null &&
+                Gamepad.current.buttonEast.wasPressedThisFrame && SkillManager.instance.dashSkill.CanUseSkill()))
         {
-            dashUsageTimer = dashCooldown;
+            
             stateMachine.ChangeState(dashState);
             // // 如果不在冲刺状态，重置 canPerformDashAttack 为 false
             // if (!(stateMachine.currentState is PlayerDashState))
@@ -127,10 +167,32 @@ public class Player : Entity
         }
     }
 
+
+
+    // public Vector2 DetermineCornerPosition()
+    // {
+    //     RaycastHit2D xHit = Physics2D.Raycast(transform.position, Vector2.right * facingDirection, wallCheckDistance, whatIsGround);
+    //     float xDistance = xHit.distance;
+    //     workSpace.Set(xDistance * facingDirection, 0f);
+    //     RaycastHit2D yHit = Physics2D.Raycast(ledgeCheck.position + (vector3)(workSpace),Vector2.down,ledgeCheck.position.y - wallCheck.position.y, whatIsGround);
+    //     float yDistance = yHit.distance;
+    //     workSpace.Set(wallCheck.position.x + (xDistance * facingDirection),ledgeCheck.position.y - yDistance);
+    //     return workSpace;
+    // }
+    public Vector2 DetermineCornerPosition()
+    {
+        RaycastHit2D xHit = Physics2D.Raycast(transform.position, Vector2.right * facingDirection, wallCheckDistance, whatIsGround);
+        float xDistance = xHit.distance;
+        workSpace.Set(xDistance * facingDirection, 0f);
+
+        // 将workSpace转换为Vector3
+        Vector3 workspace3 = new Vector3(workSpace.x, workSpace.y, 0f);
     
-
-   
-
+        RaycastHit2D yHit = Physics2D.Raycast(ledgeCheck.position + workspace3, Vector2.down, ledgeCheck.position.y - wallCheck.position.y, whatIsGround);
+        float yDistance = yHit.distance;
+        workSpace.Set(wallCheck.position.x + (xDistance * facingDirection), ledgeCheck.position.y - yDistance);
+        return workSpace;
+    }
     public void AnimationTrigger()
     {
         stateMachine.currentState.AnimationFinishTrigger();
@@ -143,6 +205,18 @@ public class Player : Entity
     public void OnDashAttackComplete()
     {
         stateMachine.currentState.CanNotPerformDashAttack();
+    }
+
+    public void OnPerformCrossKick()
+    {
+        Debug.Log("Cross kick frame reached.");
+        stateMachine.currentState.PerformCrossKick();
+    }
+
+    public void OnCrossKickComplete()
+    {
+        Debug.Log("Cross kick complete");
+        stateMachine.currentState.PerformRegularAttack();
     }
    
     // private Rigidbody2D rb;

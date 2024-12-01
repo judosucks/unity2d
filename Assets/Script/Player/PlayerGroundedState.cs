@@ -26,7 +26,14 @@ public class PlayerGroundedState : PlayerState
     public override void Update()
     {
         base.Update();
+        
+        
         moveDirection = Input.GetAxisRaw("Horizontal");
+        if (Keyboard.current.qKey.wasPressedThisFrame)
+        {
+            Debug.Log("Q pressed counter attack from grounded state");
+            stateMachine.ChangeState(player.counterAttackState);
+        }
         if (Mouse.current.leftButton.wasPressedThisFrame||(gamepad!=null && gamepad.buttonWest.wasPressedThisFrame))
         {
             stateMachine.ChangeState(player.primaryAttackState);

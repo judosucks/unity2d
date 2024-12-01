@@ -6,31 +6,36 @@ using UnityEngine.UI;
 public class EnemyState 
 {
    protected EnemyStateMachine stateMachine;
-   protected Enemy enemy;
-
+   protected Enemy enemyBase;
+   protected Rigidbody2D rb;
    protected bool triggerCalled;
    private string animBoolName;
    protected float stateTimer;
 
-   public EnemyState(Enemy _enemy, EnemyStateMachine _stateMachine, string _animBoolName)
+   public EnemyState(Enemy _enemyBase, EnemyStateMachine _stateMachine, string _animBoolName)
    {
-      this.enemy = _enemy;
+      this.enemyBase = _enemyBase;
       this.stateMachine = _stateMachine;
       this.animBoolName = _animBoolName;
    }
 
-   public virtual void Update()
-   {
-      stateTimer -= Time.deltaTime;
-   }
    public virtual void Enter()
    {
+      rb = enemyBase.rb;
       triggerCalled = false;
-      enemy.anim.SetBool(animBoolName,true);
+      enemyBase.anim.SetBool(animBoolName,true);
    }
 
    public virtual void Exit()
    {
-      enemy.anim.SetBool(animBoolName,false);
+      enemyBase.anim.SetBool(animBoolName,false);
+   }
+   public virtual void Update()
+   {
+      stateTimer -= Time.deltaTime;
+   }
+   public virtual void AnimationFinishTrigger()
+   {
+      triggerCalled = true;
    }
 }

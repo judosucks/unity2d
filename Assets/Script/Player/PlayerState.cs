@@ -3,6 +3,7 @@ using System.Collections.Generic;
 
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.Rendering.UI;
 
 
 public class PlayerState
@@ -18,6 +19,7 @@ public class PlayerState
     protected float stateTimer;
     protected bool triggerCalled;
     protected bool canPerformDashAttack; // flag to check if dash attack is allowed
+    
     public PlayerState(Player _player, PlayerStateMachine _stateMachine, string _animBoolName)
     {
         this.player = _player;
@@ -31,6 +33,7 @@ public class PlayerState
        rb = player.rb;
        triggerCalled = false;
        canPerformDashAttack = false;
+       
        gamepad = Gamepad.current;
        mouse = Mouse.current;
        
@@ -65,4 +68,18 @@ public class PlayerState
     {
         canPerformDashAttack = false;
     }
+    public virtual void PerformCrossKick()
+    {
+        player.isCrossKick = true; //执行crosskick动作
+        Debug.Log("Player is cross kicking"+player.isCrossKick);
+    }
+
+    public virtual void PerformRegularAttack()
+    {
+        player.isCrossKick = false;// 执行普通攻击动作
+        triggerCalled = true;
+        Debug.Log("player finish crosskick"+player.isCrossKick);
+    }
+
+   
 }
