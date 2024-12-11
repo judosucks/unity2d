@@ -58,7 +58,7 @@ public class AngelBattleState : EnemyState
             enemy.lastTimeAttacked = Time.time;
             return true;
         }
-        Debug.Log("attack is on cooldown");
+        
         return false; 
     }
 }

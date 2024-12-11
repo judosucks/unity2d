@@ -39,6 +39,9 @@ public class PlayerAnimationTriggers : MonoBehaviour
         player.ledgeClimbState.AnimationFinishTrigger();
     }
 
+    
+
+    
     // private void AttackTrigger()
     // {
     //     Debug.Log("AttackTrigger fired.");
@@ -53,6 +56,41 @@ public class PlayerAnimationTriggers : MonoBehaviour
     //         }
     //     }
     // }
+    // private void AttackTrigger()
+    // {
+    //     Collider2D[] colliders =
+    //         Physics2D.OverlapCircleAll(player.attackCheck.position, player.attackCheckRadius);
+    //     foreach (var hit in colliders)
+    //     {
+    //         if (hit.GetComponent<Enemy>() != null)
+    //         {
+    //             Debug.Log("enemy hit");
+    //             hit.GetComponent<Enemy>().Damage();
+    //             if (player.isCrossKick)
+    //             {
+    //                 // 应用crosskick的特殊击退力
+    //                 Vector2 crossKickForce = new Vector2(player.specialKnockbackForce, player.firstKickKnockbackYdirection);
+    //                 // Vector2 force = player.isCrossKick
+    //                 //     ? new Vector2(player.specialKnockbackForce,10)
+    //                 //     : new Vector2(player.regularForce, 0);
+    //                 hit.GetComponent<Enemy>().ApplyKnockback(crossKickForce);
+    //                 player.HandleAttackHit();
+    //                 Debug.Log("enemy received crosskick knockback");
+    //             }
+    //             else
+    //             {
+    //                 Vector2 regularKnockBackForce = new Vector2(player.regularForce, player.secondKickKnockbackYdirection);
+    //                 hit.GetComponent<Enemy>().ApplyKnockback(regularKnockBackForce);
+    //                 Debug.Log("enemy received regular knockback");
+    //             }
+    //             
+    //         }
+    //
+    //          
+    //     }
+    //     // 攻击完成后重置 isCrossKick
+    //     player.isCrossKick = false;
+    // }
     private void AttackTrigger()
     {
         Collider2D[] colliders =
@@ -63,29 +101,38 @@ public class PlayerAnimationTriggers : MonoBehaviour
             {
                 Debug.Log("enemy hit");
                 hit.GetComponent<Enemy>().Damage();
+
                 if (player.isCrossKick)
                 {
-                    // 应用crosskick的特殊击退力
-                    Vector2 crossKickForce = new Vector2(player.specialKnockbackForce, player.firstKickKnockbackYdirection);
-                    // Vector2 force = player.isCrossKick
-                    //     ? new Vector2(player.specialKnockbackForce,10)
-                    //     : new Vector2(player.regularForce, 0);
+                    // 应用 CrossKick 的击打逻辑
+                    Vector2 crossKickForce = new Vector2(player.specialKnockbackForce , player.firstKickKnockbackYdirection);
                     hit.GetComponent<Enemy>().ApplyKnockback(crossKickForce);
-                    player.HandleAttackHit();
                     Debug.Log("enemy received crosskick knockback");
                 }
                 else
                 {
-                    Vector2 regularKnockBackForce = new Vector2(player.regularForce, player.secondKickKnockbackYdirection);
+                    // 应用常规连击的击打逻辑
+                    Vector2 regularKnockBackForce = new Vector2(player.regularForce , player.regularForceY); 
                     hit.GetComponent<Enemy>().ApplyKnockback(regularKnockBackForce);
                     Debug.Log("enemy received regular knockback");
                 }
-                
-            }
 
-             
+                if (player.isKneeKick)
+                {
+                    Vector2 kneeKickForce = new Vector2(player.kneeKickKnockbackDirection.x,
+                        player.kneeKickKnockbackDirection.y);
+                    hit.GetComponent<Enemy>().ApplyKnockback(kneeKickForce);
+                    Debug.Log("enemy received knee kick knockback");
+                }
+            }
         }
-        // 攻击完成后重置 isCrossKick
         player.isCrossKick = false;
+        player.isKneeKick = false;
+    }
+
+    private void ThrowGrenadeEvent()
+    {
+        Debug.Log("throw grenade");
+        SkillManager.instance.grenadeSkill.CreateGrenade();
     }
 }

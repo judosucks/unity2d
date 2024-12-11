@@ -11,6 +11,7 @@ public class Enemy : Entity
    [SerializeField] protected GameObject counterImage;
    [SerializeField]protected LayerMask whatIsPlayer;
    [Header("move info")] 
+   private float defaultMoveSpeed;
    public float moveSpeed;
    public float idleTime;
    public float battleTime;
@@ -25,6 +26,7 @@ public class Enemy : Entity
    {
       base.Awake();
       stateMachine = new EnemyStateMachine();
+      defaultMoveSpeed = moveSpeed;
    }
 
    protected override void Update()
@@ -60,9 +62,32 @@ public class Enemy : Entity
       Gizmos.color = Color.red;
       Gizmos.DrawLine(transform.position,new Vector3(transform.position.x + attackDistance * facingDirection,transform.position.y));
    }
+
+   public virtual void FreezeTime(bool _timeFreeze)
+   {
+      if (_timeFreeze)
+      {
+         moveSpeed = 0;
+         anim.speed = 0;
+      }
+      else
+      {
+         moveSpeed = defaultMoveSpeed;
+         anim.speed = 1;
+      }
+      
+   }
+
+   protected virtual IEnumerator FreezeTimerFor(float _seconds)
+   {
+      FreezeTime(true);
+      yield return new WaitForSeconds(_seconds);
+      FreezeTime(false);
+   }
+
    public void ApplyKnockback(Vector2 force)
    {
-      rb.linearVelocity = new Vector2(force.x * - facingDirection, force.y * - facingDirection);
+      rb.linearVelocity = new Vector2(force.x * - facingDirection, force.y );
    }
 
    public virtual void OpenCounterAttackWindow()

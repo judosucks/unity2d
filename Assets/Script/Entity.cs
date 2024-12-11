@@ -12,48 +12,59 @@ public class Entity : MonoBehaviour
     [SerializeField] protected Transform wallCheck;
     [SerializeField] protected float wallCheckDistance;
     [SerializeField] protected LayerMask whatIsGround;
-
+    [Header("kneekick info")]
+    public float kneeKickCooldown = 1.5f;
+    public float kneeKickKnockbackForce = 10f;
+    public bool isKneeKick;
+    public Vector2 kneeKickKnockbackDirection;
+    
     [Header("knockback info")] 
     [SerializeField] protected Vector2 knockbackDirection;
 
     protected bool isKnocked;
     [SerializeField] protected float knockbackDuration;
-    protected int kickCount { get; private set; } = 0; // 计数第几次攻击
+    
     [Header("cross kick info")]
     public Vector2 firstKickKnockbackForce;
-    public Vector2 secondKickKnockbackForce;
+    
     public float firstKickKnockbackYdirection;
-    public float secondKickKnockbackYdirection;
+   
     public bool isCrossKick;
     
     public float specialKnockbackForce = 10.0f; // 示例值，根据需要调整
     public float regularForce = 5.0f; // 示例值，根据需要调整
+    public float regularForceY;
     [Header("ledge info")]
     [SerializeField]public Vector2 startOffset;
     [SerializeField]public Vector2 stopOffset;
-    [SerializeField]protected float climbSpeed;
-     public Vector2 climbBegunPosition;
-    public Vector2 climbOverPosition;
-    protected bool canGrabLedge = true;
-    protected bool canClimb;
+    
     public bool isHanging;
     [Header("ledge check")]
     [SerializeField]protected Transform ledgeCheck;
     public int facingDirection { get; private set; } = 1;
     protected bool facingRight = true;
+    [Header("throw grenade info")]
+    public bool isThrowComplete;
+    [Header("sprint info")]
+    public bool isSprint;
 
+    [Header("blackhole info")] 
+    
     #region components
     public Animator anim { get; private set; }
     public Rigidbody2D rb { get; private set; }
     public EntityFX fx { get; private set; }
     
+    public SpriteRenderer sr{get;private set;}
+    
 
     #endregion
     protected virtual void Awake()
     {
-        fx = GetComponent<EntityFX>();
-        rb = GetComponent<Rigidbody2D>();
+        sr = GetComponentInChildren<SpriteRenderer>();
         anim = GetComponentInChildren<Animator>();
+        rb = GetComponent<Rigidbody2D>();
+        fx = GetComponent<EntityFX>();
     }
 
     protected virtual void Start()
@@ -71,9 +82,23 @@ public class Entity : MonoBehaviour
         fx.StartCoroutine("FlashFX");
         StartCoroutine("HitKnockback");
         // rb.AddForce(new Vector2(knockbackForce.x * -facingDirection, knockbackForce.y));
-        Debug.Log(gameObject.name+"Damage");
+        
     }
 
+    public void MakeTransparent(bool _transparent)
+    {
+        
+        if (_transparent)
+        {
+            Debug.Log("make transparent true");
+            sr.color = Color.clear;
+        }
+        else
+        {
+            Debug.Log("make transparent false");
+            sr.color = Color.white;
+        }
+    }
     protected virtual IEnumerator HitKnockback()
     {
         isKnocked = true;
@@ -81,23 +106,7 @@ public class Entity : MonoBehaviour
         yield return new WaitForSeconds(knockbackDuration);
         isKnocked = false;
     }
-    public void HandleAttackHit()
-    {
-        kickCount++;
-        Debug.Log("kickCount"+kickCount);
-        if (kickCount == 1)
-        {
-            Debug.Log("kick1");
-            rb.linearVelocity = new Vector2(firstKickKnockbackForce.x * -facingDirection,firstKickKnockbackForce.y);
-        }
-        else if (kickCount == 2)
-        {
-            Debug.Log("kick2");
-            rb.linearVelocity = new Vector2(secondKickKnockbackForce.x * -facingDirection,secondKickKnockbackForce.y);
-        }
-        if (kickCount > 1) kickCount = 0; // 超过两次重置计数
-        Debug.Log("kickcount"+kickCount);
-    }
+    
     #region velocity
 
     public void ZeroVelocity()
@@ -126,11 +135,20 @@ public class Entity : MonoBehaviour
     {
         return Physics2D.Raycast(ledgeCheck.position, Vector2.right * facingDirection, wallCheckDistance, whatIsGround);
     }
+    // public virtual bool IsGroundDetected()
+    // {
+    //     return Physics2D.Raycast(groundCheck.position, Vector2.down, groundCheckDistance, whatIsGround);
+    // }
+
     public virtual bool IsGroundDetected()
     {
-        return Physics2D.Raycast(groundCheck.position, Vector2.down, groundCheckDistance, whatIsGround);
+        RaycastHit2D hit = Physics2D.Raycast(groundCheck.position, Vector2.down, groundCheckDistance, whatIsGround);
+        bool isGroundDetected = hit.collider != null;
+    
+        
+    
+        return isGroundDetected;
     }
-
     public virtual bool IsWallDetected()
     {
         return Physics2D.Raycast(wallCheck.position, Vector2.right * facingDirection,
@@ -156,6 +174,7 @@ public class Entity : MonoBehaviour
         facingDirection = facingDirection * -1;
         facingRight = !facingRight;
         transform.Rotate(0, 180, 0);
+        Debug.Log("flip"+" "+facingDirection);
     }
 
     public virtual void FlipController(float _x)

@@ -1,9 +1,7 @@
-using System.Collections;
-using System.Collections.Generic;
+
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.InputSystem.LowLevel;
-using UnityEngine.InputSystem.XR;
+
 
 public class PlayerGroundedState : PlayerState
 {
@@ -29,6 +27,16 @@ public class PlayerGroundedState : PlayerState
         
         
         moveDirection = Input.GetAxisRaw("Horizontal");
+        if (Keyboard.current.rKey.wasPressedThisFrame)
+        {
+            Debug.Log("blackhole");
+            stateMachine.ChangeState(player.blackholeState);
+        }
+        if (mouse.rightButton.isPressed && !player.grenade)
+        {
+            Debug.Log("Right mouse button pressed no grenade");
+            stateMachine.ChangeState(player.throwSwordState);
+        }
         if (Keyboard.current.qKey.wasPressedThisFrame)
         {
             Debug.Log("Q pressed counter attack from grounded state");
@@ -53,5 +61,17 @@ public class PlayerGroundedState : PlayerState
         {
             stateMachine.ChangeState(player.straightJumpState);
         }
+    }
+
+    private bool HasNoGrenade()
+    {
+        if (!player.grenade)
+        {
+            Debug.Log("No grenade");
+            return true;
+        }
+        Debug.Log("Grenade is not empty");
+        // player.grenade.GetComponent<GrenadeSkillController>().ReturnGrenade();
+        return false;
     }
 }

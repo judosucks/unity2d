@@ -20,7 +20,7 @@ public class Player : Entity
     public float horizontalSpeed = 1f;
     public float straightJumpForce = 5f;
     public float jumpForce = 3f;
-    
+    public float grenadeReturnImpact;
 
     [Header("dash")] 
    
@@ -28,9 +28,9 @@ public class Player : Entity
     public float dashSpeed;
     public float dashDuration;
 
-    
-
-  
+    public SkillManager skill { get; private set; }
+    public GameObject grenade { get; private set; }
+    public PlayerInput playerInput;
     private bool isBusy; // 私有字段
 
     public bool GetIsBusy() // 公开方法获取属性
@@ -64,10 +64,15 @@ public class Player : Entity
     public PlayerSprintState sprintState { get; private set; }
     public PlayerLedgeClimbState ledgeClimbState { get; private set; }
     public PlayerCounterAttackState counterAttackState { get; private set; }
+    public PlayerThrowSwordState throwSwordState { get; private set; }
+    
+    public PlayerBlackholeState blackholeState { get; private set; }
+   
+    public PlayerKneeKickState kneeKickState { get; private set; }
     protected override void Awake()
     {
         base.Awake();
-        
+        playerInput = GetComponent<PlayerInput>();
         if (anim == null)
         {
             Debug.LogError("Animator component is missing in children.");
@@ -87,11 +92,15 @@ public class Player : Entity
         primaryAttackState = new PlayerPrimaryAttackState(this, stateMachine, "Attack");
         ledgeClimbState = new PlayerLedgeClimbState(this,stateMachine,"LedgeClimbState");
         counterAttackState = new PlayerCounterAttackState(this, stateMachine, "CounterAttack");
+        kneeKickState = new PlayerKneeKickState(this, stateMachine, "KneeKick");
+        throwSwordState = new PlayerThrowSwordState(this, stateMachine, "AimGrenade");
+        blackholeState = new PlayerBlackholeState(this, stateMachine, "Blackhole");
     }
 
     protected override void Start()
     {
         base.Start();
+        skill = SkillManager.instance;
         stateMachine.Initialize(idleState);
         
     }
@@ -101,16 +110,36 @@ public class Player : Entity
         base.Update();
         stateMachine.currentState.Update();
         if (isBusy)
-        {
-            Debug.Log("Current State: " + stateMachine?.currentState);
-           Debug.Log("isbusy return");
+        { 
             return; // 如果玩家处于忙碌状态，禁止其他输入
-        }
-            
-        
-        
+        } 
         DashInput(); // 冲刺输入处理
-       
+    }
+
+    public void AssignNewGrenade(GameObject _newGrenade)
+    {
+        Debug.Log("assigngrenade");
+        grenade = _newGrenade;
+    }
+
+    public void ClearGrenade()
+    {
+        Debug.Log("cleargrenade");
+        StartCoroutine(DestroyGrenadeAfterDelay(2f));
+    }
+
+    private IEnumerator DestroyGrenadeAfterDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        Destroy(grenade);
+    }
+
+    
+    public bool IsThrowCompleted()
+    {
+        Debug.Log("iscomplete");
+        return isThrowComplete = true;
+        
     }
 
     
@@ -137,11 +166,11 @@ public class Player : Entity
     public IEnumerator BusyFor(float _seconds)
     {
         isBusy = true;
-        Debug.Log("busy");
+        
         yield return new WaitForSeconds(_seconds);
 
         isBusy = false;
-        Debug.Log("not busy");
+        
     }
 
    
@@ -154,8 +183,8 @@ public class Player : Entity
             return;
         }
         
-        if ((Keyboard.current.fKey.wasPressedThisFrame && SkillManager.instance.dashSkill.CanUseSkill()) || (Gamepad.current != null &&
-                Gamepad.current.buttonEast.wasPressedThisFrame && SkillManager.instance.dashSkill.CanUseSkill()))
+        if ((Keyboard.current.fKey.wasPressedThisFrame && skill.dashSkill.CanUseSkill()) || (Gamepad.current != null &&
+                Gamepad.current.buttonEast.wasPressedThisFrame && skill.dashSkill.CanUseSkill()))
         {
             
             stateMachine.ChangeState(dashState);
@@ -199,7 +228,7 @@ public class Player : Entity
     }
     public void OnDashAttackFrame()
     {
-        Debug.Log("Dash attack frame reached.");
+        
         stateMachine.currentState.CanPerformDashAttack();
     }
     public void OnDashAttackComplete()
@@ -209,13 +238,13 @@ public class Player : Entity
 
     public void OnPerformCrossKick()
     {
-        Debug.Log("Cross kick frame reached.");
+        
         stateMachine.currentState.PerformCrossKick();
     }
 
     public void OnCrossKickComplete()
     {
-        Debug.Log("Cross kick complete");
+        
         stateMachine.currentState.PerformRegularAttack();
     }
    

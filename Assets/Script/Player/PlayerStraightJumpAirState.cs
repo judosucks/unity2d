@@ -25,6 +25,7 @@ public class PlayerStraightJumpAirState : PlayerState
     public override void Update()
     {
         base.Update();
+        
         isTouchingLedge = player.CheckIfTouchingLedge();
         if (player.IsWallDetected() && !isTouchingLedge && stateMachine.currentState != player.airState)
         {
@@ -38,8 +39,11 @@ public class PlayerStraightJumpAirState : PlayerState
         }
         if (player.IsGroundDetected())
         {
+            Debug.Log("this is straight jump air state is touching ground");
             stateMachine.ChangeState(player.idleState);
         }
-       
+
+        
+        
     }
 }

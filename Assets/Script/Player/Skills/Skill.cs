@@ -7,8 +7,14 @@ public class Skill : MonoBehaviour
 {
     [SerializeField] protected float cooldown;
     protected float cooldownTimer;
+    protected Player player;
 
-    protected void Update()
+    protected virtual void Start()
+    {
+        player = PlayerManager.instance.player;
+    }
+
+    protected virtual void Update()
     {
         cooldownTimer -= Time.deltaTime;
     }
@@ -17,6 +23,7 @@ public class Skill : MonoBehaviour
     {
         if (cooldownTimer < 0)
         {
+            Debug.Log("useskill from skill");
             //use skill
             UseSkill();
             cooldownTimer = cooldown;

@@ -24,14 +24,16 @@ public class PlayerCounterAttackState : PlayerState
             {
                 if (hit.GetComponent<Enemy>().CanBeStunned())
                 {
+                    Debug.Log("enemy can be stunned");
                     stateTimer = 10f; //any value bigger than 1
                     player.anim.SetBool("SuccessCounter", true);
                 }
             }
         }
-
+     
         if (stateTimer < 0 || triggerCalled)
         {
+            Debug.Log("idle from counter");
             stateMachine.ChangeState(player.idleState);
         }
     }

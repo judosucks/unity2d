@@ -30,7 +30,7 @@ public class PlayerMoveState : PlayerGroundedState
         SprintInput();//衝刺輸入處理
         if (!player.isAttacking)
         {
-            Debug.Log("Player is not attacking");
+            
         player.SetVelocity(moveDirection * player.movementSpeed,rb.linearVelocity.y);
             
         }

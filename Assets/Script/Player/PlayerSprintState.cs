@@ -29,9 +29,15 @@ public class PlayerSprintState : PlayerGroundedState
     {
         base.Update();
         moveDirection = Input.GetAxisRaw("Horizontal");
+        
         if (!Keyboard.current.leftShiftKey.isPressed || moveDirection == 0)
         {
             stateMachine.ChangeState(player.moveState); // 释放左Shift键或停止移动时回到移动状态
+        }
+        // 检查是否按下左键进行膝击
+        if (Mouse.current.leftButton.wasPressedThisFrame)
+        {
+            stateMachine.ChangeState(player.kneeKickState);
         }
         player.SetVelocity(moveDirection * player.movementSpeed, rb.linearVelocity.y);
     }

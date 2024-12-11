@@ -11,9 +11,12 @@ public class PlayerDashState : PlayerState
     {
     }
 
+    
+
     public override void Enter()
     {
         base.Enter();
+        player.skill.cloneSkill.CreateClone(player.transform,new Vector3(0,0));
         IsDashing = true;
         stateTimer = player.dashDuration;
        
@@ -29,7 +32,7 @@ public class PlayerDashState : PlayerState
     public override void Update()
     {
         base.Update();
-        if (player.IsGroundDetected() && player.IsWallDetected())
+        if (!player.IsGroundDetected() && player.IsWallDetected())
         {
             stateMachine.ChangeState(player.wallSlideState);
         }
@@ -46,10 +49,10 @@ public class PlayerDashState : PlayerState
         
         if (canPerformDashAttack)
         {
-            Debug.Log("candashattack"+canPerformDashAttack);
+            
             if (mouse.leftButton.wasPressedThisFrame || (gamepad != null && gamepad.buttonWest.wasPressedThisFrame))
             {
-                Debug.Log("candashattack left"+canPerformDashAttack);
+                
                 stateMachine.ChangeState(player.crossKickState);
             }
             
@@ -57,10 +60,12 @@ public class PlayerDashState : PlayerState
         }
         else if(stateTimer < 0f)
         {
-            Debug.Log("Switching to idle state");
+            
             stateMachine.ChangeState(player.idleState);
         }
     }
+
+   
 
     
 }

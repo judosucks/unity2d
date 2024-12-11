@@ -53,6 +53,7 @@ public class PlayerState
     {
         player.anim.SetBool(animBoolName, false);
     }
+    
 
     public virtual void AnimationFinishTrigger()
     {
@@ -81,5 +82,6 @@ public class PlayerState
         Debug.Log("player finish crosskick"+player.isCrossKick);
     }
 
+    
    
 }

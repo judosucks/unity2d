@@ -796,6 +796,34 @@
                     "isPartOfComposite": false
                 }
             ]
+        },
+        {
+            "name": "PlayerSkills",
+            "id": "3addaeb4-a42e-4af9-97df-cd33d62caf18",
+            "actions": [
+                {
+                    "name": "Blackhole",
+                    "type": "PassThrough",
+                    "id": "5cc94d3e-256d-41f6-b53d-4863ab97e2ff",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "3c8afbeb-0c28-476f-a690-f04c221501b3",
+                    "path": "<Keyboard>/anyKey",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";Keyboard&Mouse",
+                    "action": "Blackhole",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
         }
     ],
     "controlSchemes": [
