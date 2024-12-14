@@ -1,12 +1,12 @@
 using Cinemachine;
 using UnityEngine;
 
-public class PlayerThrowSwordState : PlayerState
+public class PlayerThrowGrenadeState : PlayerState
 {
     
     private NewCamera newCamera;
     
-    public PlayerThrowSwordState(Player _player, PlayerStateMachine _stateMachine, string _animBoolName) : base(_player, _stateMachine, _animBoolName)
+    public PlayerThrowGrenadeState(Player _player, PlayerStateMachine _stateMachine, string _animBoolName) : base(_player, _stateMachine, _animBoolName)
     {
        
     }

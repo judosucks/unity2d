@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class Entity : MonoBehaviour
 {
+    public CapsuleCollider2D cd;
     [Header("Collision info")] 
     public float attackCheckRadius;
     public Transform attackCheck;
@@ -50,6 +51,8 @@ public class Entity : MonoBehaviour
 
     [Header("blackhole info")] 
     
+    
+    public System.Action onFlipped;
     #region components
     public Animator anim { get; private set; }
     public Rigidbody2D rb { get; private set; }
@@ -57,7 +60,7 @@ public class Entity : MonoBehaviour
     
     public SpriteRenderer sr{get;private set;}
     
-
+    public CharacterStats stats { get; private set; }
     #endregion
     protected virtual void Awake()
     {
@@ -65,6 +68,8 @@ public class Entity : MonoBehaviour
         anim = GetComponentInChildren<Animator>();
         rb = GetComponent<Rigidbody2D>();
         fx = GetComponent<EntityFX>();
+        stats = GetComponent<CharacterStats>();
+        cd = GetComponent<CapsuleCollider2D>();
     }
 
     protected virtual void Start()
@@ -77,7 +82,7 @@ public class Entity : MonoBehaviour
         
     }
 
-    public virtual void Damage()
+    public virtual void DamageEffect()
     {
         fx.StartCoroutine("FlashFX");
         StartCoroutine("HitKnockback");
@@ -87,17 +92,19 @@ public class Entity : MonoBehaviour
 
     public void MakeTransparent(bool _transparent)
     {
-        
-        if (_transparent)
-        {
-            Debug.Log("make transparent true");
-            sr.color = Color.clear;
-        }
-        else
-        {
-            Debug.Log("make transparent false");
-            sr.color = Color.white;
-        }
+        Color color = sr.color;
+        color.a = _transparent ? 0f : 1.0f; // Adjust alpha for transparency
+        sr.color = color;
+        // if (_transparent)
+        // {
+        //     Debug.Log("make transparent true");
+        //     sr.color = Color.clear;
+        // }
+        // else
+        // {
+        //     Debug.Log("make transparent false");
+        //     sr.color = Color.white;
+        // }
     }
     protected virtual IEnumerator HitKnockback()
     {
@@ -174,7 +181,11 @@ public class Entity : MonoBehaviour
         facingDirection = facingDirection * -1;
         facingRight = !facingRight;
         transform.Rotate(0, 180, 0);
-        Debug.Log("flip"+" "+facingDirection);
+        if (onFlipped != null)
+        {
+          onFlipped();
+        }
+
     }
 
     public virtual void FlipController(float _x)
@@ -184,5 +195,9 @@ public class Entity : MonoBehaviour
         else if (_x < 0 && facingRight) Flip();
     }
     #endregion
-    
+
+    public virtual void Die()
+    {
+        
+    }
 }

@@ -35,7 +35,7 @@ public class PlayerGroundedState : PlayerState
         if (mouse.rightButton.isPressed && !player.grenade)
         {
             Debug.Log("Right mouse button pressed no grenade");
-            stateMachine.ChangeState(player.throwSwordState);
+            stateMachine.ChangeState(player.throwGrenadeState);
         }
         if (Keyboard.current.qKey.wasPressedThisFrame)
         {

@@ -64,11 +64,13 @@ public class Player : Entity
     public PlayerSprintState sprintState { get; private set; }
     public PlayerLedgeClimbState ledgeClimbState { get; private set; }
     public PlayerCounterAttackState counterAttackState { get; private set; }
-    public PlayerThrowSwordState throwSwordState { get; private set; }
+    public PlayerThrowGrenadeState throwGrenadeState { get; private set; }
     
     public PlayerBlackholeState blackholeState { get; private set; }
    
     public PlayerKneeKickState kneeKickState { get; private set; }
+    
+    public PlayerDeadState deadState { get; private set; }
     protected override void Awake()
     {
         base.Awake();
@@ -93,8 +95,9 @@ public class Player : Entity
         ledgeClimbState = new PlayerLedgeClimbState(this,stateMachine,"LedgeClimbState");
         counterAttackState = new PlayerCounterAttackState(this, stateMachine, "CounterAttack");
         kneeKickState = new PlayerKneeKickState(this, stateMachine, "KneeKick");
-        throwSwordState = new PlayerThrowSwordState(this, stateMachine, "AimGrenade");
+        throwGrenadeState = new PlayerThrowGrenadeState(this, stateMachine, "AimGrenade");
         blackholeState = new PlayerBlackholeState(this, stateMachine, "Blackhole");
+        deadState = new PlayerDeadState(this, stateMachine, "Dead");
     }
 
     protected override void Start()
@@ -247,7 +250,12 @@ public class Player : Entity
         
         stateMachine.currentState.PerformRegularAttack();
     }
-   
+
+    public override void Die()
+    {
+        base.Die();
+        stateMachine.ChangeState(deadState);
+    }
     // private Rigidbody2D rb;
     // private PlayerInput playerInput;
     // private InputAction jumpAction;

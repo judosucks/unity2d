@@ -8,6 +8,8 @@ public class Enemy_Angel :Enemy
     public AngelBattleState battleState { get;private set; }
     public AngelAttackState attackState { get;private set; }
     public AngelStunState stunState { get;private set; }
+    
+    public AngelDeadState deadState { get;private set; }
     protected override void Awake()
     {
         base.Awake();
@@ -16,6 +18,7 @@ public class Enemy_Angel :Enemy
         moveState = new AngelMoveState(this, stateMachine, "Move", this);
         attackState = new AngelAttackState(this, stateMachine, "Attack", this);
         stunState = new AngelStunState(this, stateMachine, "Stun", this);
+        deadState = new AngelDeadState(this, stateMachine, "Idle", this);
     }
 
     protected override void Start()
@@ -41,5 +44,11 @@ public class Enemy_Angel :Enemy
         }
 
         return false;
+    }
+
+    public override void Die()
+    {
+        base.Die();
+        stateMachine.ChangeState(deadState);
     }
 }

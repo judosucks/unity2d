@@ -8,6 +8,7 @@ public class Adjust : MonoBehaviour
     private Player player;
     public CinemachineVirtualCamera playerCamera;
     public CinemachineVirtualCamera grenadeCamera;
+    public CinemachineVirtualCamera blackholeCamera;
     public CinemachineFramingTransposer framingTransposer;
     [Header("camera info")]
     
@@ -16,17 +17,22 @@ public class Adjust : MonoBehaviour
     public float temporaryScreenX; // 用于临时储存平滑过渡值
     [SerializeField]private float originalScreenX = 0.5f;
     public float targetScreenX;
+    [SerializeField] private float blackholeScreenY =0.34f;
+    private float originalScreenY = 0.5f;
     public float currentVelocity;
-    [SerializeField] private float targetOrthoSize = 1f;
-    [SerializeField] private float playerOrthoSize = 2f;
+    [SerializeField]private float blackholeOrthoSize=3.78f;
+    
+    [SerializeField] private float grenadeOrthoSize = 1f;
+    [SerializeField] private float playerOrthoSize = 2.28f;
     [SerializeField] private float orthoSizeVelocity = 0f;
-    public GameObject theGrenade { get;private set;}
+   
     
     
     protected void Awake()
     {
         grenadeCamera = GameObject.FindGameObjectWithTag("GrenadeCamera").GetComponent<CinemachineVirtualCamera>();
         playerCamera = GameObject.FindGameObjectWithTag("PlayerCamera").GetComponent<CinemachineVirtualCamera>();
+        blackholeCamera = GameObject.FindGameObjectWithTag("BlackholeCamera").GetComponent<CinemachineVirtualCamera>();
         if (playerCamera == null)
         {
             Debug.LogError("PlayerCamera is not found or doesn't have the correct tag.");
@@ -41,17 +47,13 @@ public class Adjust : MonoBehaviour
     protected void Start()
     {
         player = PlayerManager.instance.player;
+        if (player == null)
+        {
+            Debug.LogError("Player object is null. Ensure PlayerManager is correctly assigning the player reference.");
+        }
         if (playerCamera != null)
         {
-            Debug.Log("player camera found");
-            
             framingTransposer = playerCamera.GetCinemachineComponent<CinemachineFramingTransposer>();
-            if (framingTransposer == null)
-            {
-                
-                Debug.LogError("No CinemachineFramingTransposer attached to playerCamera.");
-                return;
-            }
             
         }
     }
@@ -61,58 +63,71 @@ public class Adjust : MonoBehaviour
         
     }
 
-    public virtual void CinemachineFollowPlayer()
-    {
-        SetCameraPriority(playerCamera, grenadeCamera);
-    }
-    public virtual void CinemachineFollowObject(GameObject target)
-    {
-        Debug.Log("follow grenade");
-        grenadeCamera.Follow = target.transform;
-        SetCameraPriority(grenadeCamera, playerCamera);
-    }
+    
+    
     private void SetCameraPriority(CinemachineVirtualCamera mainCam, CinemachineVirtualCamera secondaryCam)
     {
         mainCam.Priority = 20;
         secondaryCam.Priority = 10;
     }
-    public virtual void SmoothZoom(CinemachineVirtualCamera cam, float targetOrthoSize)
+    public virtual void SmoothZoom(CinemachineVirtualCamera cam,float _targetOrthoSize)
     {
         float currentOrthoSize = cam.m_Lens.OrthographicSize;
         cam.m_Lens.OrthographicSize = Mathf.SmoothDamp(
             currentOrthoSize, 
-            targetOrthoSize, 
+            _targetOrthoSize, 
             ref orthoSizeVelocity, 
             zoomSpeed);
     }
 
     public void ResetZoom()
     {
-        Debug.Log("reset zoom for player"+ originalScreenX+""+framingTransposer.m_ScreenX);
+        
         framingTransposer.m_ScreenX = originalScreenX;
+        framingTransposer.m_ScreenY = originalScreenY;
     }
-    public void FollowGrenade(GameObject _grenade)
+    public void FollowGrenade()
     {
-        theGrenade = _grenade;
-        Debug.Log("follow grenade");
-        CinemachineFollowObject(_grenade);
-        SmoothZoom(grenadeCamera,targetOrthoSize);
+        
+       
+        SetCameraPriority(grenadeCamera, playerCamera);
+        SmoothZoom(grenadeCamera,grenadeOrthoSize);
     }
-    public virtual void FollowPlayer()
+    public virtual void FollowPlayer(CinemachineVirtualCamera _targetCam)
     {
-        Debug.Log("follow player");
-        CinemachineFollowPlayer();
+        
+        SetCameraPriority(playerCamera,_targetCam);
         SmoothZoom(playerCamera, playerOrthoSize);
+        
     }
-    public virtual void SetScreenX(CinemachineVirtualCamera cam, float targetScreenX, float smoothTime)
+    public virtual void SetScreenX(CinemachineVirtualCamera cam, float _targetScreenX, float smoothTime)
     {
         
         float currentScreenX = framingTransposer.m_ScreenX;
         float velocity = 0f;
         framingTransposer.m_ScreenX = Mathf.SmoothDamp(
             currentScreenX,
-            targetScreenX,
+            _targetScreenX,
             ref velocity,
             smoothTime);
+    }
+
+    public virtual void SetScreenY(CinemachineVirtualCamera cam, float _targetScreenY, float smoothTime)
+    {
+     
+        float currentScreenY = framingTransposer.m_ScreenY;
+        float velocity = 0f;
+        framingTransposer.m_ScreenY = Mathf.SmoothDamp(
+            currentScreenY,
+            _targetScreenY,
+            ref velocity,smoothTime);
+        
+    }
+    public virtual void FollowBlackhole()
+    {
+       
+        SetCameraPriority(blackholeCamera, playerCamera);
+        SmoothZoom(blackholeCamera,blackholeOrthoSize);
+        
     }
 }

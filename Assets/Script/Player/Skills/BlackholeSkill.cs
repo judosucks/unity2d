@@ -9,7 +9,7 @@ public class BlackholeSkill : Skill
     [SerializeField] private float growSpeed;
     [SerializeField] private float shrinkSpeed;
     
-    [SerializeField] private float blackholeDuration;
+    public float blackholeDuration;
     FireOrbitController fireOrbitController;
     BlackholeSkillController currentBlackhole;
     protected override void Start()
@@ -34,29 +34,33 @@ public class BlackholeSkill : Skill
         GameObject newBlackhole = Instantiate(blackholePrefab,player.transform.position,Quaternion.identity);
         
         currentBlackhole = newBlackhole.GetComponent <BlackholeSkillController>();
+        
         fireOrbitController = newBlackhole.GetComponent<FireOrbitController>();
+        
         currentBlackhole.SetupBlackhole(maxSize,growSpeed,shrinkSpeed,amountOfAttacks,cloneCooldown,blackholeDuration);
         // 啟動火焰公轉效果（只需初始化一次）
         fireOrbitController.Initialize(currentBlackhole.transform);
         // 啟用火焰
         fireOrbitController.SetFireObjectsActive(true);
-
-        Debug.Log("blackhole is in setup mode");
+           
+        
     }
 
     public bool BlackholeSkillCompleted()
     {
-        if (!currentBlackhole)
+        if (!currentBlackhole||currentBlackhole == null)
         {
-            return false;
+            
+            return true;
         }
 
         if (currentBlackhole.playerCanExitState)
         {
+            
             currentBlackhole = null;
             return true;
         }
-
+        
         return false;
     }
 }
