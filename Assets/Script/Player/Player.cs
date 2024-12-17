@@ -21,10 +21,12 @@ public class Player : Entity
     public float straightJumpForce = 5f;
     public float jumpForce = 3f;
     public float grenadeReturnImpact;
+    private float defaultMoveSpeed;
+    private float defaultJumpForce;
 
     [Header("dash")] 
    
-
+    private float defaultDashSpeed;
     public float dashSpeed;
     public float dashDuration;
 
@@ -105,7 +107,10 @@ public class Player : Entity
         base.Start();
         skill = SkillManager.instance;
         stateMachine.Initialize(idleState);
-        
+        defaultJumpForce = jumpForce;
+        defaultMoveSpeed = movementSpeed;
+        defaultDashSpeed = dashSpeed;
+
     }
 
     protected override void Update()
@@ -119,6 +124,24 @@ public class Player : Entity
         DashInput(); // 冲刺输入处理
     }
 
+    public override void SlowEntityBy(float _slowPercent, float _slowDuration)
+    {
+        movementSpeed = movementSpeed * (1 - _slowPercent);
+        dashSpeed = dashSpeed * (1 - _slowPercent);
+        jumpForce = jumpForce * (1 - _slowPercent);
+        anim.speed = anim.speed * (1 - _slowPercent);
+        Invoke("ReturnDefaultSpeed", _slowDuration);
+        
+    }
+
+    protected override void ReturnDefaultSpeed()
+    {
+        base.ReturnDefaultSpeed();
+        movementSpeed = defaultMoveSpeed;
+        dashSpeed = defaultDashSpeed;
+        jumpForce = defaultJumpForce;
+        
+    }
     public void AssignNewGrenade(GameObject _newGrenade)
     {
         Debug.Log("assigngrenade");

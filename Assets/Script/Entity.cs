@@ -90,6 +90,15 @@ public class Entity : MonoBehaviour
         
     }
 
+    public virtual void SlowEntityBy(float _slowPercent, float _slowDuration)
+    {
+        
+    }
+
+    protected virtual void ReturnDefaultSpeed()
+    {
+        anim.speed = 1f;
+    }
     public void MakeTransparent(bool _transparent)
     {
         Color color = sr.color;

@@ -4,6 +4,7 @@ using Random = UnityEngine.Random;
 
 public class CharacterStats : MonoBehaviour
 {
+    private EntityFX entityFX;
     [Header("major stats")] 
     public Stat strength;// 1 point increase damage by 1 point and crit damage by 1 point
     public Stat agility;// 1 point increase speed by 1% and crit chance by 1%
@@ -27,10 +28,12 @@ public class CharacterStats : MonoBehaviour
     public bool isIgnited; //does damage over time
     public bool isChilled; //reduce armor by 20%
     public bool isShocked; //reduce accuracy by 20%
+    [SerializeField] private float ailmentsDuration = 4;
     private float ignitedTimer;
     private float chillTimer;
     private float shockTimer;
-    
+    [SerializeField]private GameObject thunderStrikePrefab;
+    private int shockDamage;
     private float ignitedDamageCooldown = .3f;
     private float ignitedDamageTimer;
     private int iginitedDamage;
@@ -41,6 +44,7 @@ public class CharacterStats : MonoBehaviour
     {
         currentHealth = GetMaxHealthValue();
         critPower.SetDefaultValue(150);
+        entityFX = GetComponent<EntityFX>();
     }
 
     protected virtual void Update()
@@ -149,6 +153,12 @@ public class CharacterStats : MonoBehaviour
             Debug.Log("can apply ignite");
             _targetStats.SetupIgnitedDamage(Mathf.RoundToInt(_fireDamage * .2f));
         }
+
+        if (canApplyShock)
+        {
+            Debug.Log("can apply shock");
+            _targetStats.SetupThunderStrikeDamage(Mathf.RoundToInt(_lightningDamage * .1f));
+        }
         
         _targetStats.ApplyAilments(canApplyIgnite, canApplyChill, canApplyShock);
         
@@ -163,34 +173,83 @@ public class CharacterStats : MonoBehaviour
 
     public void ApplyAilments(bool _isIgnited, bool _isChilled, bool _isShocked)
     {
-        if (isIgnited || isChilled || isShocked)
-        {
-            Debug.Log("Ailments already applied");
-            return;
-        }
+        bool canApplyIgnite = !isIgnited && !isChilled && !isShocked;
+        bool canApplyChill = !isIgnited && !isChilled && !isShocked;
+        bool canApplyShock = !isIgnited && !isChilled;
 
-        if (_isIgnited)
+        if (_isIgnited && canApplyIgnite)
         {
             Debug.Log("Ignited");
           isIgnited = _isIgnited;
-          ignitedTimer = 2;
+          ignitedTimer = ailmentsDuration;
+          entityFX.IgnitedFxFor(ailmentsDuration);
+          
         }
 
-        if (_isChilled)
+        if (_isChilled && canApplyChill)
         {
             Debug.Log("Chilled");
            isChilled = _isChilled;
-           chillTimer = 2; 
+           chillTimer = ailmentsDuration;
+           float slowPercent = .2f;
+           GetComponent<Entity>().SlowEntityBy(slowPercent, ailmentsDuration);
+           entityFX.ChillFxFor(ailmentsDuration);
         }
 
-        if (_isShocked)
+        if (_isShocked && canApplyShock)
         {
-            Debug.Log("Shocked");
-            isShocked = _isShocked;
-            shockTimer = 2;
+            if (!isShocked)
+            {
+              Debug.Log("Shocked");
+              isShocked = _isShocked;
+              shockTimer = ailmentsDuration;
+              entityFX.ShockFxFor(ailmentsDuration);
+            }
+            else
+            {
+                if (GetComponent<Player>() != null)
+                {
+                    return;
+                }
+
+                HitNearestTargetWithThunderStrike();
+            }
         }
         
     }
+    private void HitNearestTargetWithThunderStrike()
+    {
+        Collider2D[] colliders = Physics2D.OverlapCircleAll(transform.position, 8);
+
+        float closestDistance = Mathf.Infinity;
+        Transform closestEnemy = null;
+
+        foreach (var hit in colliders)
+        {
+            if (hit.GetComponent<Enemy>() != null && Vector2.Distance(transform.position, hit.transform.position) > 1)
+            {
+                float distanceToEnemy = Vector2.Distance(transform.position, hit.transform.position);
+
+                if (distanceToEnemy < closestDistance)
+                {
+                    closestDistance = distanceToEnemy;
+                    closestEnemy = hit.transform;
+                }
+            }
+
+            if (closestEnemy == null)            // delete if you don't want shocked target to be hit by shock strike
+                closestEnemy = transform;
+        }
+
+
+        if (closestEnemy != null)
+        {
+            GameObject newThunderStrike = Instantiate(thunderStrikePrefab, transform.position, Quaternion.identity);
+            newThunderStrike.GetComponent<ThunderStrikeController>().Setup(shockDamage, closestEnemy.GetComponent<CharacterStats>());
+        }
+    }
+    
+    public void SetupThunderStrikeDamage(int _damage) => shockDamage = _damage;
     public void SetupIgnitedDamage(int _damage)=> iginitedDamage = _damage;
     private int CalculateCriticalDamage(int _damage)
     {

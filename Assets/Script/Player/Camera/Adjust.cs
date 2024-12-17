@@ -9,6 +9,7 @@ public class Adjust : MonoBehaviour
     public CinemachineVirtualCamera playerCamera;
     public CinemachineVirtualCamera grenadeCamera;
     public CinemachineVirtualCamera blackholeCamera;
+    public CinemachineVirtualCamera thunderCamera;
     public CinemachineFramingTransposer framingTransposer;
     [Header("camera info")]
     
@@ -24,6 +25,7 @@ public class Adjust : MonoBehaviour
     
     [SerializeField] private float grenadeOrthoSize = 1f;
     [SerializeField] private float playerOrthoSize = 2.28f;
+    [SerializeField] private float thunderOrthoSize = 2.28f;
     [SerializeField] private float orthoSizeVelocity = 0f;
    
     
@@ -33,6 +35,7 @@ public class Adjust : MonoBehaviour
         grenadeCamera = GameObject.FindGameObjectWithTag("GrenadeCamera").GetComponent<CinemachineVirtualCamera>();
         playerCamera = GameObject.FindGameObjectWithTag("PlayerCamera").GetComponent<CinemachineVirtualCamera>();
         blackholeCamera = GameObject.FindGameObjectWithTag("BlackholeCamera").GetComponent<CinemachineVirtualCamera>();
+        thunderCamera = GameObject.FindGameObjectWithTag("ThunderCamera").GetComponent<CinemachineVirtualCamera>();
         if (playerCamera == null)
         {
             Debug.LogError("PlayerCamera is not found or doesn't have the correct tag.");
@@ -98,6 +101,13 @@ public class Adjust : MonoBehaviour
         
         SetCameraPriority(playerCamera,_targetCam);
         SmoothZoom(playerCamera, playerOrthoSize);
+        
+    }
+    public virtual void FollowThunder()
+    {
+        
+        SetCameraPriority(thunderCamera, playerCamera);
+        SmoothZoom(thunderCamera, thunderOrthoSize);
         
     }
     public virtual void SetScreenX(CinemachineVirtualCamera cam, float _targetScreenX, float smoothTime)
